@@ -1,5 +1,9 @@
 pipeline{
     agent any
+    tools {
+    git 'Default'
+}
+
       environment{
         SONAR_HOME= tool 'sonarqube'
       }
