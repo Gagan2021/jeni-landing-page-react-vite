@@ -17,6 +17,9 @@ pipeline{
                 sh 'docker build -t space .'
             }
         }
+        stage('trivy checking image vulnerbilities'){
+            sh 'trivy image space'
+        }
         stage('Running docker image'){
             steps{
                 sh 'docker run -d -p 5001:5173 space'
