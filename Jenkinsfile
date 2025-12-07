@@ -18,7 +18,10 @@ pipeline{
             }
         }
         stage('trivy checking image vulnerbilities'){
-            sh 'trivy image space'
+            steps{
+                 sh 'trivy image space'
+            }
+           
         }
         stage('Running docker image'){
             steps{
