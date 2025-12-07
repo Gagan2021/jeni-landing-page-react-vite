@@ -2,8 +2,9 @@ pipeline{
     agent any
     stages{
         stage('cloning the code from the github repo'){
-            steps{
-                sh 'git clone https://github.com/Gagan2021/jeni-landing-page-react-vite.git'
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Gagan2021/jeni-landing-page-react-vite.git'
             }
         }
         stage('installing dependencies for the project'){
