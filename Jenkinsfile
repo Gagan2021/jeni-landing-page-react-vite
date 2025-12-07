@@ -1,7 +1,7 @@
 pipeline{
     agent any
       environment{
-        SONAR_HOME= tool 'sonar'
+        SONAR_HOME= tool 'sonarqube'
       }
     stages{
         stage('cloning the code from the github repo'){
@@ -17,8 +17,8 @@ pipeline{
         }
         stage('sonarqube testing started'){
             steps{
-                withSonarQubeEnv('sonar'){
-                    sh '$SONAR_HOME/bin/sonar-scanner -Dsonar.projectName=space -Dsonar.projectKey=space'
+                withSonarQubeEnv('sonarqube'){
+                    sh '$SONAR_HOME/bin/sonarqube-scanner -Dsonar.projectName=space -Dsonar.projectKey=space'
                 }
             }
         }
