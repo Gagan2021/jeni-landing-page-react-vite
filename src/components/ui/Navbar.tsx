@@ -26,7 +26,7 @@ export function Navbar() {
             </div>
 
             <ul style={{ display: 'flex', gap: '2rem', listStyle: 'none' }}>
-                {['MISSION', 'GALLERY', 'GANG'].map((item) => (
+                {['MISSION', 'PHOTOS', 'GANG'].map((item) => (
                     <li key={item}>
                         <a href="#" style={{
                             color: 'white',
