@@ -3,7 +3,7 @@ pipeline{
     stages{
         stage('cloning the code from the github repo'){
             steps{
-                sh 'git clone https://github.com/Gagan2021/space-project.git'
+                sh 'git clone https://github.com/Gagan2021/jeni-landing-page-react-vite.git'
             }
         }
         stage('installing dependencies for the project'){
@@ -11,10 +11,16 @@ pipeline{
                 sh 'npm install'
             }
         }
-        stage('running this project on host server'){
+        stage('building docker image for this project'){
             steps{
-                sh 'npm run dev'
+                sh 'docker build -t space .'
             }
         }
+        stage('Running docker image'){
+            steps{
+                sh 'docker run -d -p 5001:5173 space'
+            }
+        }
+
     }
 }
