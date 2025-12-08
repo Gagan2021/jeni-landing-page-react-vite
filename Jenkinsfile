@@ -33,6 +33,11 @@ pipeline{
             }
            
         }
+        stage('check for old running container to prevent conflict'){
+            sh ''' 
+                if docker ps -a --format '{{.Names}}' | grep -w "space-container"; then docker stop space-container || true docker rm space-container || true fi
+            '''
+        }
         stage('Running docker image'){
             steps{
                 sh 'docker run -d -p 5001:5173 space'
