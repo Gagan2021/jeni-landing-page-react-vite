@@ -34,9 +34,13 @@ pipeline{
            
         }
         stage('check for old running container to prevent conflict'){
+            steps{
+
+            
             sh ''' 
                 if docker ps -a --format '{{.Names}}' | grep -w "space-container"; then docker stop space-container || true docker rm space-container || true fi
             '''
+            }
         }
         stage('Running docker image'){
             steps{
