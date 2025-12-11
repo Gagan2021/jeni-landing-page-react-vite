@@ -1,81 +1,64 @@
 pipeline {
     agent any
-    //   environment{
-    //     SONAR_HOME= tool 'sonarqube'
-    //   }
+
+    environment {
+        IMAGE_NAME = "myapp:latest"
+        TRIVY_CONTAINER = "trivy-temp"
+        REPORT_FILE = "trivy-report.html"
+    }
+
     stages {
-        stage('cloning the code from the github repo') {
-            steps {
-                git url: 'https://github.com/Gagan2021/jeni-landing-page-react-vite.git', branch: 'main'
+        stage('checkout'){
+            steps{
+                git url: '', branch: 'main'
             }
         }
-        stage('installing dependencies for the project') {
-            steps {
-                sh 'npm install'
-            }
-        }
-        // stage('sonarqube testing started'){
-        //     steps{
-        //         withSonarQubeEnv('sonarqube'){
-        //             sh '$SONAR_HOME/bin/sonarqube-scanner -Dsonar.projectName=space -Dsonar.projectKey=space'
-        //         }
-        //     }
-        // }
-        stage('building docker image for this project') {
-            steps {
-                sh 'docker build -t space .'
-            }
-        }
-        stage('trivy checking image vulnerbilities') {
-            steps {
-                sh 'trivy image space'
-            }
-        }
-        stage('check for old running container to prevent conflict') {
+      
+
+        stage('Build Image with docker') {
             steps {
                 sh '''
-                if docker ps -a --format '{{.Names}}' | grep -w "space-container"; then docker stop space-container || true docker rm space-container || true
-                fi
-            '''
+                 docker stop $IMAGE_NAME || true
+                    docker rm $IMAGE_NAME || true
+                    docker rmi $IMAGE_NAME || true
+                    echo "[*] Building image using docker..."
+                    docker build -t $IMAGE_NAME .
+                '''
             }
         }
-        stage('Running docker image') {
+
+        stage('Run Trivy Scan') {
             steps {
-                sh 'docker run -d -p 5001:5173 space'
+                sh '''
+                    echo "[*] Pulling Trivy image..."
+                    docker pull aquasec/trivy:latest
+
+                    echo "[*] Running Trivy container..."
+                    docker run --name $TRIVY_CONTAINER --rm \
+                        -v /var/run/docker/docker.sock:/var/run/docker/docker.sock \
+                        -v `pwd`:/root/report \
+                        aquasec/trivy image --format template --template "@contrib/html.tpl" -o /root/report/$REPORT_FILE $IMAGE_NAME
+                '''
+            }
+        }
+
+        stage('Archive Report') {
+            steps {
+                echo "Archiving Trivy report to Jenkins..."
+                archiveArtifacts artifacts: REPORT_FILE, allowEmptyArchive: false
             }
         }
     }
+
     post {
-        success {
-            emailext(
-            subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body: """
-Boss,
+        always {
+            sh '''
+                echo "[*] Cleaning Trivy image if exists..."
+                docker rmi aquasec/trivy:latest || true
 
-Build SUCCESS ho gaya! 🎉
-Pipeline ne code deploy kar diya hai.
-
-Job: ${env.JOB_NAME}
-Build No: ${env.BUILD_NUMBER}
-""",
-            to: 'chaudharygagan661@gmail.com'
-        )
-        }
-
-        failure {
-            emailext(
-            subject: "FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body: """
-Boss,
-
-Build FAIL ho gaya ❌
-Please Jenkins logs check karo.
-
-Job: ${env.JOB_NAME}
-Build No: ${env.BUILD_NUMBER}
-""",
-            to: 'chaudharygagan661@gmail.com'
-        )
+                echo "[*] Cleaning build image..."
+                docker rmi $IMAGE_NAME || true
+            '''
         }
     }
 }

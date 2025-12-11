@@ -16,7 +16,7 @@ export function Stars() {
     return (
         <DreiStars
             ref={ref}
-            radius={100}
+            radius={300}
             depth={50}
             count={5000}
             factor={4}

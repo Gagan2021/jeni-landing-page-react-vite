@@ -1,4 +1,4 @@
-import { Sphere, MeshDistortMaterial } from '@react-three/drei';
+import { Sphere } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef, useState } from 'react';
 import { Mesh } from 'three';
@@ -10,11 +10,12 @@ interface PlanetProps {
     speed: number;
     rotationSpeed?: number;
     distort?: number;
+    hasRings?: boolean;
 }
 
-export function Planet({ distance, size, color, speed, rotationSpeed = 0.01, distort = 0 }: PlanetProps) {
+export function Planet({ distance, size, color, speed, rotationSpeed = 0.005, hasRings = false }: PlanetProps) {
     const meshRef = useRef<Mesh>(null!);
-    const [angle, setAngle] = useState(Math.random() * Math.PI * 2); // Random start angle
+    const [angle, setAngle] = useState(Math.random() * Math.PI * 2);
 
     useFrame((_, delta) => {
         if (meshRef.current) {
@@ -22,7 +23,7 @@ export function Planet({ distance, size, color, speed, rotationSpeed = 0.01, dis
             meshRef.current.rotation.y += rotationSpeed;
 
             // Orbit logic
-            setAngle((prev) => prev + speed * delta);
+            setAngle((prev) => prev + speed * delta * 0.5);
             const x = Math.cos(angle) * distance;
             const z = Math.sin(angle) * distance;
             meshRef.current.position.set(x, 0, z);
@@ -31,23 +32,25 @@ export function Planet({ distance, size, color, speed, rotationSpeed = 0.01, dis
 
     return (
         <group>
-            {/* Orbit path visualization (optional) */}
+            {/* Orbit path visualization */}
             <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                <ringGeometry args={[distance - 0.05, distance + 0.05, 64]} />
-                <meshBasicMaterial color="#ffffff" opacity={0.1} transparent side={2} />
+                <ringGeometry args={[distance - 0.02, distance + 0.02, 128]} />
+                <meshBasicMaterial color="#ffffff" opacity={0.05} transparent side={2} />
             </mesh>
 
-            <Sphere args={[1, 32, 32]} ref={meshRef} scale={[size, size, size]}>
-                {distort > 0 ? (
-                    <MeshDistortMaterial
-                        color={color}
-                        attach="material"
-                        distort={distort}
-                        speed={2}
-                        roughness={0.5}
-                    />
-                ) : (
-                    <meshStandardMaterial color={color} roughness={0.5} />
+            <Sphere args={[1, 64, 64]} ref={meshRef} scale={[size, size, size]}>
+                <meshPhysicalMaterial
+                    color={color}
+                    roughness={0.7}
+                    metalness={0.2}
+                    clearcoat={0.1}
+                />
+
+                {hasRings && (
+                    <mesh rotation={[-Math.PI / 2, 0, 0]} scale={[1.5, 1.5, 1.5]}>
+                        <ringGeometry args={[1.2, 2.2, 64]} />
+                        <meshStandardMaterial color="#CDBA96" opacity={0.7} transparent side={2} />
+                    </mesh>
                 )}
             </Sphere>
         </group>
