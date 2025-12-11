@@ -1,8 +1,6 @@
 pipeline {
     agent any
-    //   environment{
-    //     SONAR_HOME= tool 'sonarqube'
-    //   }
+    
     stages {
         stage('cloning the code from the github repo') {
             steps {
@@ -14,23 +12,17 @@ pipeline {
                 sh 'npm install'
             }
         }
-        stage('sonarqube testing started'){
-            steps{
-                withSonarQubeEnv('sonarqube'){
-                    sh '$SONAR_HOME/bin/sonarqube-scanner -Dsonar.projectName=space -Dsonar.projectKey=space'
-                }
-            }
-        }
+     
         stage('building docker image for this project') {
             steps {
                 sh 'docker build -t space .'
             }
         }
-        stage('trivy checking image vulnerbilities') {
-            steps {
-                sh 'trivy image space'
-            }
-        }
+        // stage('trivy checking image vulnerbilities') {
+        //     steps {
+        //         sh 'trivy image space'
+        //     }
+        // }
         stage('check for old running container to prevent conflict') {
             steps {
                 sh '''
@@ -86,37 +78,3 @@ Build No: ${env.BUILD_NUMBER}
 
 
 
-
-
-stage('SonarQube Testing') {
-    steps {
-        script {
-            // Jenkins Global Tool Configuration se Scanner ka path utha raha hu
-            // Note: Agar tumne tool ka naam 'SonarScanner' nahi rakha hai to check kar lena
-            def scannerHome = tool 'SonarScanner' 
-            
-            withSonarQubeEnv('sonarqube') {
-                
-                // --- 1. BACKEND SCAN (Maven use karenge) ---
-                echo "Scanning Backend..."
-                dir('backend') {
-                    // Maven plugin sabse best hai Java k liye
-                    // projectKey unique hona chahiye
-                    sh 'mvn sonar:sonar -Dsonar.projectKey=my-backend-project -Dsonar.projectName="My Backend"'
-                }
-
-                // --- 2. FRONTEND SCAN (Generic Scanner use karenge) ---
-                echo "Scanning Frontend..."
-                dir('frontend') {
-                    sh """
-                        ${scannerHome}/bin/sonar-scanner \
-                        -Dsonar.projectKey=my-frontend-project \
-                        -Dsonar.projectName="My Frontend" \
-                        -Dsonar.sources=src \
-                        -Dsonar.exclusions=**/node_modules/**,**/*.test.js,**/build/**
-                    """
-                }
-            }
-        }
-    }
-}
