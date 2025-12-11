@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('checkout'){
             steps{
-                git url: '', branch: 'main'
+                git url: 'https://github.com/Gagan2021/jeni-landing-page-react-vite.git', branch: 'main'
             }
         }
       
